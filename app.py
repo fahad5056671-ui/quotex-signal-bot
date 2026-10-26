@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-
+import requests
 st.set_page_config(page_title="EUR/USD Signal Bot", layout="wide")
 
 st.title("EUR/USD Signal Dashboard")
