@@ -12,7 +12,45 @@ st.warning("এটি পরীক্ষামূলক সিগন্যাল
 
 uploaded = st.file_uploader("Upload EUR/USD candle CSV", type=["csv"])
 
-def calculate_signals(df):
+
+st.subheader("Live API Candle Data")
+
+try:
+    api_key = st.secrets["OTCHARTS_API_KEY"]
+
+    response = requests.get(
+        "https://otcharts.com/v1/candles",
+        headers={"Authorization": f"Bearer {api_key}"},
+        params={
+            "venue": "quotex",
+            "symbol": "EURUSD_otc",
+            "tf": 60,
+            "limit": 100
+        },
+        timeout=20
+    )
+
+    if response.status_code == 200:
+        candles = response.json().get("candles", [])
+        if candles:
+            api_data = pd.DataFrame(candles)
+            result = calculate_signals(api_data)
+            st.success("ক্যান্ডেল ডেটা পাওয়া গেছে!")
+            st.dataframe(
+                result.tail(20),
+                use_container_width=True
+            )
+        else:
+            st.warning("API কোনো ক্যান্ডেল ফেরত দেয়নি।")
+    else:
+        st.error(
+            f"API Error {response.status_code}: "
+            f"{response.text}"
+        )
+
+except Exception as e:
+    st.error(f"API সংযোগে সমস্যা: {e}")
+ calculate_signals(df):
     df.columns = [str(c).lower().strip() for c in df.columns]
 
     if "close" not in df.columns:
