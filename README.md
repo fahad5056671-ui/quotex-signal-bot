@@ -1,5 +1,5 @@
 
-import streamlit as st
+import requests streamlit as st
 import pandas as pd
 import numpy as np
 
@@ -184,7 +184,49 @@ if uploaded_file is not None:
             df[show_cols].tail(20),
             use_container_width=True
         )
+st.subheader("Quotex OTC ডেটা পরীক্ষা")
 
+if st.button("EUR/USD OTC ডেটা আনুন"):
+    try:
+        api_key = st.secrets["OTCHARTS_API_KEY"]
+
+        response = requests.get(
+            "https://otcharts.com/v1/candles",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={
+                "venue": "quotex",
+                "symbol": "EURUSD_otc",
+                "tf": 60,
+                "limit": 100,
+            },
+            timeout=20,
+        )
+
+        if response.status_code != 200:
+            st.error(
+                f"API সমস্যা ({response.status_code}): "
+                "ডেটা পাওয়া যায়নি। API plan ও symbol যাচাই করুন।"
+            )
+        else:
+            payload = response.json()
+            candles = payload.get("candles", [])
+
+            if not candles:
+                st.warning("API কোনো candle ফেরত দেয়নি।")
+            else:
+                live_df = pd.DataFrame(candles)
+                live_df["time"] = pd.to_datetime(
+                    live_df["time"], unit="s", utc=True
+                )
+                st.success(
+                    f"{len(live_df)}টি candle পাওয়া গেছে।"
+                )
+                st.dataframe(live_df, use_container_width=True)
+
+    except KeyError:
+        st.error("Streamlit Secrets-এ API key যোগ করা নেই।")
+    except Exception as e:
+        st.error(f"ডেটা আনতে সমস্যা হয়েছে: {e}")
         csv_data = df.to_csv(index=False).encode("utf-8")
         st.download_button(
             "সিগন্যাল CSV ডাউনলোড",
