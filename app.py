@@ -50,7 +50,7 @@ try:
 
 except Exception as e:
     st.error(f"API সংযোগে সমস্যা: {e}")
- calculate_signals(df):
+ def calculate_signals(df):
     df.columns = [str(c).lower().strip() for c in df.columns]
 
     if "close" not in df.columns:
