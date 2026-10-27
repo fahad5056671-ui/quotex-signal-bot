@@ -95,3 +95,36 @@ if uploaded is not None:
         st.error(f"Could not process CSV: {e}")
 else:
     st.info("Upload candle data with a close column to calculate signals.")
+
+def calculate_signals(df):
+    df = df.copy()
+
+    # প্রয়োজনীয় candle columns আছে কি না পরীক্ষা
+    required = ["open", "high", "low", "close"]
+    if not all(col in df.columns for col in required):
+        return df
+
+    df["EMA9"] = df["close"].ewm(span=9, adjust=False).mean()
+    df["EMA21"] = df["close"].ewm(span=21, adjust=False).mean()
+
+    delta = df["close"].diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+
+    avg_gain = gain.rolling(14).mean()
+    avg_loss = loss.rolling(14).mean()
+
+    rs = avg_gain / avg_loss.replace(0, float("nan"))
+    df["RSI"] = 100 - (100 / (1 + rs))
+
+    df["Signal"] = "WAIT"
+    df.loc[
+        (df["EMA9"] > df["EMA21"]) & (df["RSI"] < 70),
+        "Signal"
+    ] = "BUY"
+    df.loc[
+        (df["EMA9"] < df["EMA21"]) & (df["RSI"] > 30),
+        "Signal"
+    ] = "SELL"
+
+    return df
