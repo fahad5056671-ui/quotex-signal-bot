@@ -76,7 +76,7 @@ except Exception as e:
 if uploaded is not None:
     try:
         data = pd.read_csv(uploaded)
-        result = calculate_signals(data)
+        result =result = calculate_signals(data)
 
         a, b, c = st.columns(3)
         a.metric("BUY", int((result["Signal"] == "BUY").sum()))
@@ -96,7 +96,7 @@ if uploaded is not None:
 else:
     st.info("Upload candle data with a close column to calculate signals.")
 
-def calculate_signals(df):
+def result = calculate_signals(data):
     df = df.copy()
 
     # প্রয়োজনীয় candle columns আছে কি না পরীক্ষা
